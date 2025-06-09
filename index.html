@@ -380,6 +380,10 @@
                 <div class="stat-value" id="totalCleans">0</div>
                 <div class="stat-label">All-Time Cleans</div>
             </div>
+            <div class="stat">
+                <div class="stat-value" id="rank">Rookie Scrubber</div>
+                <div class="stat-label">Rank</div>
+            </div>
         </div>
 
         <div class="game-area">
@@ -419,6 +423,30 @@
                 this.totalCleans = 0;
                 this.clickPower = 1;
                 this.cps = 0;
+                this.currentRank = "Rookie Scrubber";
+                
+                this.ranks = [
+                    { name: "Rookie Scrubber", requirement: 0, color: "#888" },
+                    { name: "Soap Apprentice", requirement: 50, color: "#4ecdc4" },
+                    { name: "Bubble Enthusiast", requirement: 200, color: "#45b7d1" },
+                    { name: "Detergent Devotee", requirement: 500, color: "#96ceb4" },
+                    { name: "Suds Specialist", requirement: 1000, color: "#feca57" },
+                    { name: "Foam Fanatic", requirement: 2500, color: "#ff9ff3" },
+                    { name: "Master of Baiter", requirement: 5000, color: "#ff6b6b" },
+                    { name: "Goon Lord", requirement: 10000, color: "#a55eea" },
+                    { name: "Scrub Commander", requirement: 25000, color: "#26de81" },
+                    { name: "Wash Warrior", requirement: 50000, color: "#fd79a8" },
+                    { name: "Cleaning Crusader", requirement: 100000, color: "#fdcb6e" },
+                    { name: "Sanitization Sage", requirement: 250000, color: "#6c5ce7" },
+                    { name: "Purification Prince", requirement: 500000, color: "#a29bfe" },
+                    { name: "Hygiene Hero", requirement: 1000000, color: "#fd79a8" },
+                    { name: "Spotless Sovereign", requirement: 2500000, color: "#fdcb6e" },
+                    { name: "Cleanliness Czar", requirement: 5000000, color: "#00b894" },
+                    { name: "Pristine Pharaoh", requirement: 10000000, color: "#e17055" },
+                    { name: "Immaculate Emperor", requirement: 25000000, color: "#0984e3" },
+                    { name: "Supreme Sanitizer", requirement: 50000000, color: "#6c5ce7" },
+                    { name: "God of Grime Removal", requirement: 100000000, color: "#ffd700" }
+                ];
                 
                 this.upgrades = [
                     {
@@ -638,6 +666,8 @@
                     { name: "Cosmic Cleaner", desc: "Reach 100,000 cleans", requirement: 100000, unlocked: false },
                     { name: "First Helper", desc: "Buy your first upgrade", requirement: 'firstUpgrade', unlocked: false },
                     { name: "Power Clicker", desc: "Buy your first click upgrade", requirement: 'firstClickUpgrade', unlocked: false },
+                    { name: "Master of Baiter", desc: "Reach the Master of Baiter rank", requirement: 'masterRank', unlocked: false },
+                    { name: "Goon Lord", desc: "Reach the Goon Lord rank", requirement: 'goonRank', unlocked: false },
                     { name: "Automation", desc: "Reach 10 cleans per second", requirement: 'cps10', unlocked: false },
                     { name: "Industrial", desc: "Reach 100 cleans per second", requirement: 'cps100', unlocked: false }
                 ];
@@ -751,9 +781,85 @@
                 document.getElementById('cps').textContent = this.formatNumber(this.cps, 1);
                 document.getElementById('totalCleans').textContent = this.formatNumber(this.totalCleans);
                 
+                // Update rank
+                this.updateRank();
+                document.getElementById('rank').textContent = this.currentRank;
+                
                 // Update upgrades when display updates to refresh affordability
                 this.renderUpgrades();
                 this.renderClickUpgrades();
+            }
+
+            updateRank() {
+                let newRank = this.currentRank;
+                let rankColor = "#888";
+                
+                for (let i = this.ranks.length - 1; i >= 0; i--) {
+                    if (this.totalCleans >= this.ranks[i].requirement) {
+                        newRank = this.ranks[i].name;
+                        rankColor = this.ranks[i].color;
+                        break;
+                    }
+                }
+                
+                // Show rank up notification
+                if (newRank !== this.currentRank) {
+                    this.showRankUpNotification(newRank);
+                    this.currentRank = newRank;
+                }
+                
+                // Update rank display color
+                const rankElement = document.getElementById('rank');
+                if (rankElement) {
+                    rankElement.style.color = rankColor;
+                    rankElement.style.textShadow = `0 0 10px ${rankColor}`;
+                }
+            }
+
+            showRankUpNotification(newRank) {
+                // Create rank up notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                    color: white;
+                    padding: 20px 40px;
+                    border-radius: 15px;
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    z-index: 1000;
+                    box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+                    animation: rankUpAnim 3s ease-out forwards;
+                    pointer-events: none;
+                `;
+                notification.textContent = `🎉 RANK UP! ${newRank} 🎉`;
+                
+                // Add animation keyframes if not already added
+                if (!document.getElementById('rankUpStyles')) {
+                    const style = document.createElement('style');
+                    style.id = 'rankUpStyles';
+                    style.textContent = `
+                        @keyframes rankUpAnim {
+                            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+                            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+                            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+                document.body.appendChild(notification);
+                
+                // Remove notification after animation
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3000);
             }
 
             renderClickUpgrades() {
@@ -860,6 +966,10 @@
                             unlock = this.upgrades.some(upgrade => upgrade.owned > 0);
                         } else if (achievement.requirement === 'firstClickUpgrade') {
                             unlock = this.clickUpgrades.some(upgrade => upgrade.owned > 0);
+                        } else if (achievement.requirement === 'masterRank') {
+                            unlock = this.currentRank === 'Master of Baiter';
+                        } else if (achievement.requirement === 'goonRank') {
+                            unlock = this.currentRank === 'Goon Lord';
                         } else if (achievement.requirement === 'cps10') {
                             unlock = this.cps >= 10;
                         } else if (achievement.requirement === 'cps100') {
@@ -900,6 +1010,7 @@
                 const gameState = {
                     cleanCount: this.cleanCount,
                     totalCleans: this.totalCleans,
+                    currentRank: this.currentRank,
                     upgrades: this.upgrades,
                     clickUpgrades: this.clickUpgrades,
                     achievements: this.achievements
@@ -915,6 +1026,7 @@
                 if (saved) {
                     this.cleanCount = saved.cleanCount || 0;
                     this.totalCleans = saved.totalCleans || 0;
+                    this.currentRank = saved.currentRank || "Rookie Scrubber";
                     
                     if (saved.upgrades) {
                         saved.upgrades.forEach((savedUpgrade, index) => {
